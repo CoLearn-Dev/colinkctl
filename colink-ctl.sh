@@ -1,0 +1,141 @@
+#!/bin/bash
+set -e
+
+install() {
+    read -r -p "Install dependencies? [Y/n] " response
+    case "$response" in
+        # [yY][eE][sS]|[yY])
+        #     do_something
+        #     ;;
+        [nN][oO]|[nN])
+            ;;
+        *)
+            sudo apt update && sudo apt install git g++ cmake pkg-config libssl-dev protobuf-compiler -y
+            if ! [ -x "$(command -v cargo)" ]; then
+                curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+                source $HOME/.cargo/env
+            fi
+            read -r -p "Install RabbitMQ? [Y/n] " response
+            case "$response" in
+                [nN][oO]|[nN])
+                    ;;
+                *)
+                    sudo apt install rabbitmq-server -y
+                    sudo rabbitmq-plugins enable rabbitmq_management
+                    sudo systemctl restart rabbitmq-server.service
+                    ;;
+            esac
+            ;;
+    esac
+
+    if ! [ -f "./mq_prefix.txt" ]; then
+        echo -n "colink-dev-script-$RANDOM" > mq_prefix.txt
+    fi
+    if ! [ -d "./colink-server-dev" ]; then
+        git clone --recursive git@github.com:CoLearn-Dev/colink-server-dev.git
+    fi
+    cd colink-server-dev
+    cargo build --all-targets
+    cd ..
+    if ! [ -d "./colink-sdk-a-rust-dev" ]; then
+        git clone --recursive git@github.com:CoLearn-Dev/colink-sdk-a-rust-dev.git
+    fi
+    cd colink-sdk-a-rust-dev
+    cargo build --all-targets
+    cd ..
+    if ! [ -d "./colink-sdk-p-rust-dev" ]; then
+        git clone --recursive git@github.com:CoLearn-Dev/colink-sdk-p-rust-dev.git
+    fi
+    cd colink-sdk-p-rust-dev
+    cargo build --all-targets
+    cd ..
+    if ! [ -d "./colink-policy-module-dev" ]; then
+        git clone --recursive git@github.com:CoLearn-Dev/colink-policy-module-dev.git
+    fi
+    cd colink-policy-module-dev
+    cargo build --all-targets
+    cd ..
+    if ! [ -d "./colink-protocol-remote-storage-dev" ]; then
+        git clone --recursive git@github.com:CoLearn-Dev/colink-protocol-remote-storage-dev.git
+    fi
+    cd colink-protocol-remote-storage-dev
+    cargo build --all-targets
+    cd ..
+}
+
+start() {
+    mq_prefix=`cat mq_prefix.txt`
+    cd colink-server-dev
+    if [ -f "./pid.txt" ]; then
+        pid=`cat pid.txt`
+        if ps -p $pid > /dev/null ; then
+            echo "colink server already started."
+            return
+        fi
+    fi
+    read -r -p "Enter the port to bind the colink server [8080]:" port
+    port=${port:-8080}
+    nohup cargo run -- --address "0.0.0.0" --port $port --mq-amqp amqp://guest:guest@localhost:5672 --mq-api http://guest:guest@localhost:15672/api --mq-prefix $mq_prefix >/dev/null 2>&1 & echo -n $! > pid.txt
+    pid=`cat pid.txt`
+    for i in {1..600}; do
+        sleep 0.1
+        port_pid=`lsof -i:${port} | grep 'LISTEN' | awk '{print $2}'`
+        if [[ -n ${port_pid} && ${port_pid} == ${pid} ]]; then
+            echo "colink server start sucessfully."
+            break
+        fi
+    done
+    host_token=`cat host_token.txt`
+    echo "host_token: ${host_token}"
+    cp host_token.txt ../
+    cd ..
+}
+
+stop() {
+    cd colink-server-dev
+    if [ -f "./pid.txt" ]; then
+        pid=`cat pid.txt`
+        if ps -p $pid > /dev/null ; then
+            kill -9 $pid
+        else
+            echo "colink server already stopped."
+        fi
+    else
+        echo "colink server already stopped."
+    fi
+    cd ..
+}
+
+status() {
+    cd colink-server-dev
+    if [ -f "./pid.txt" ]; then
+        pid=`cat pid.txt`
+        if ps -p $pid > /dev/null ; then
+            echo "`ps aux | grep ${pid} | grep -v grep`"
+        else
+            echo "colink server is stopped."
+        fi
+    fi
+}
+
+case "$1" in
+    install)
+        install
+        ;;
+    start)
+        start
+        ;;
+    stop)
+        stop
+        ;;
+    status)
+        status
+        ;;
+    restart)
+        stop
+        start
+        ;;
+    *)
+        echo "usage: $0 {install|start|stop|status|restart}"
+        exit -1
+esac
