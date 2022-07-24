@@ -4,9 +4,6 @@ set -e
 install() {
     read -r -p "Install dependencies? [Y/n] " response
     case "$response" in
-        # [yY][eE][sS]|[yY])
-        #     do_something
-        #     ;;
         [nN][oO]|[nN])
             ;;
         *)
@@ -49,10 +46,10 @@ install() {
     cd colink-sdk-p-rust-dev
     cargo build --all-targets
     cd ..
-    if ! [ -d "./colink-policy-module-dev" ]; then
-        git clone --recursive git@github.com:CoLearn-Dev/colink-policy-module-dev.git
+    if ! [ -d "./colink-protocol-policy-module-dev" ]; then
+        git clone --recursive git@github.com:CoLearn-Dev/colink-protocol-policy-module-dev.git
     fi
-    cd colink-policy-module-dev
+    cd colink-protocol-policy-module-dev
     cargo build --all-targets
     cd ..
     if ! [ -d "./colink-protocol-remote-storage-dev" ]; then
@@ -70,6 +67,7 @@ start() {
         pid=`cat pid.txt`
         if ps -p $pid > /dev/null ; then
             echo "colink server already started."
+            cd ..
             return
         fi
     fi
@@ -85,8 +83,10 @@ start() {
             break
         fi
     done
+    echo $port > port.txt
     host_token=`cat host_token.txt`
     echo "host_token: ${host_token}"
+    cp port.txt ../
     cp host_token.txt ../
     cd ..
 }
@@ -116,6 +116,117 @@ status() {
             echo "colink server is stopped."
         fi
     fi
+    cd ..
+}
+
+create_users() {
+    port=`cat port.txt`
+    host_token=`cat host_token.txt`
+    cd colink-sdk-a-rust-dev
+    read -p "number of users to create [2]:" user_num
+    user_num=${user_num:-2}
+    cargo run --example host_import_users_and_exchange_guest_jwts http://127.0.0.1:$port $host_token $user_num > user_token.txt
+    cat user_token.txt
+    cp user_token.txt ../
+    cd ..
+}
+
+start_protocol() {
+    if ! [ -f "./user_token.txt" ]; then
+        echo "please create users first."
+        cd ..
+        return
+    fi
+    port=`cat port.txt`
+    dir=$1
+    cd $dir
+    if [ -f "./pid.txt" ]; then
+        echo "protocol ${dir} already started."
+        cd ..
+        return
+    fi
+    cat ../user_token.txt | while read line
+    do
+        nohup cargo run -- --addr http://127.0.0.1:$port --jwt $line >/dev/null 2>&1 & echo $! >> pid.txt
+    done
+    cd ..
+}
+
+stop_protocol() {
+    dir=$1
+    cd $dir
+    if ! [ -f "./pid.txt" ]; then
+        echo "protocol ${dir} already stopped."
+        cd ..
+        return
+    fi
+    cat ./pid.txt | while read pid
+    do
+        if ps -p $pid > /dev/null ; then
+            kill -9 $pid
+        fi
+    done
+    rm pid.txt
+    cd ..
+}
+
+_enable_policy_module() {
+    port=`cat port.txt`
+    cd colink-protocol-policy-module-dev
+    cat ../user_token.txt | while read line
+    do
+        cargo run --example start_policy_module http://127.0.0.1:$port $line
+        cargo run --example accept_all_tasks http://127.0.0.1:$port $line
+    done
+    cd ..
+}
+
+enable_dev_env() {
+    read -r -p "Are you want to (re)start the colink server? [Y/n] " response
+    case "$response" in
+        [nN][oO]|[nN])
+            ;;
+        *)
+            stop
+            start
+            ;;
+    esac
+
+    read -r -p "Are you want to create users? [Y/n] " response
+    case "$response" in
+        [nN][oO]|[nN])
+            ;;
+        *)
+            create_users
+            ;;
+    esac
+
+    read -r -p "Are you want to (re)start the policy module and accept all tasks? [Y/n] " response
+    case "$response" in
+        [nN][oO]|[nN])
+            ;;
+        *)
+            stop_protocol colink-protocol-policy-module-dev
+            start_protocol colink-protocol-policy-module-dev
+            _enable_policy_module
+            ;;
+    esac
+
+    read -r -p "Are you want to (re)start the remote storage? [Y/n] " response
+    case "$response" in
+        [nN][oO]|[nN])
+            ;;
+        *)
+            stop_protocol colink-protocol-remote-storage-dev
+            start_protocol colink-protocol-remote-storage-dev
+            ;;
+    esac
+}
+
+disable_dev_env() {
+    stop
+    stop_protocol colink-protocol-policy-module-dev
+    stop_protocol colink-protocol-remote-storage-dev
 }
 
 case "$1" in
@@ -135,7 +246,38 @@ case "$1" in
         stop
         start
         ;;
+    create_users)
+        create_users
+        ;;
+    start_protocol)
+        if [ ! -n "$2" ]; then
+            echo "usage: $0 start_protocol directory"
+            exit -1
+        fi
+        start_protocol $2
+        ;;
+    stop_protocol)
+        if [ ! -n "$2" ]; then
+            echo "usage: $0 stop_protocol directory"
+            exit -1
+        fi
+        stop_protocol $2
+        ;;
+    restart_protocol)
+        if [ ! -n "$2" ]; then
+            echo "usage: $0 restart_protocol directory"
+            exit -1
+        fi
+        stop_protocol $2
+        start_protocol $2
+        ;;
+    enable_dev_env)
+        enable_dev_env
+        ;;
+    disable_dev_env)
+        disable_dev_env
+        ;;
     *)
-        echo "usage: $0 {install|start|stop|status|restart}"
+        echo "usage: $0 {install|start|stop|status|restart|create_users|start_protocol|stop_protocol|restart_protocol|enable_dev_env|disable_dev_env}"
         exit -1
 esac
