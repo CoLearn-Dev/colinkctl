@@ -1,0 +1,38 @@
+on:
+  push:
+    branches:
+      - main
+
+name: pack
+
+jobs:
+  pack:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          submodules: recursive
+          ssh-key: ${{ secrets.SSH_KEY }}
+      - name: SSH Agent
+        run: |
+          eval `ssh-agent`
+          ssh-add - <<< "${{ secrets.SSH_KEY }}"
+          echo "SSH_AUTH_SOCK=$SSH_AUTH_SOCK" >> $GITHUB_ENV
+      - name: Download
+        run: |
+          git clone --recurse-submodules --depth 1 --shallow-submodules -b v0.1.6 git@github.com:CoLearn-Dev/colink-server-dev.git
+          git clone --recurse-submodules --depth 1 --shallow-submodules -b v0.1.9 git@github.com:CoLearn-Dev/colink-sdk-a-rust-dev.git
+          git clone --recurse-submodules --depth 1 --shallow-submodules -b v0.1.9 git@github.com:CoLearn-Dev/colink-sdk-p-rust-dev.git
+          git clone --recurse-submodules --depth 1 --shallow-submodules -b dev git@github.com:CoLearn-Dev/colink-protocol-policy-module-dev.git
+          git clone --recurse-submodules --depth 1 --shallow-submodules -b dev git@github.com:CoLearn-Dev/colink-protocol-remote-storage-dev.git
+      - name: Upload
+        uses: actions/upload-artifact@v3
+        with:
+          name: colink-ctl
+          path: |
+            colink-ctl.sh
+            colink-*/
