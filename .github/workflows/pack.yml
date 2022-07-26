@@ -24,6 +24,8 @@ jobs:
           ssh-add - <<< "${{ secrets.SSH_KEY }}"
           echo "SSH_AUTH_SOCK=$SSH_AUTH_SOCK" >> $GITHUB_ENV
       - name: Download
+        env:
+          GIT_SSH_COMMAND: "ssh -o StrictHostKeyChecking=no"
         run: |
           git clone --recurse-submodules --depth 1 --shallow-submodules -b v0.1.6 git@github.com:CoLearn-Dev/colink-server-dev.git
           git clone --recurse-submodules --depth 1 --shallow-submodules -b v0.1.9 git@github.com:CoLearn-Dev/colink-sdk-a-rust-dev.git
