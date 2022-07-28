@@ -27,11 +27,11 @@ jobs:
         env:
           GIT_SSH_COMMAND: "ssh -o StrictHostKeyChecking=no"
         run: |
-          git clone --recurse-submodules --depth 1 --shallow-submodules -b v0.1.6 git@github.com:CoLearn-Dev/colink-server-dev.git
-          git clone --recurse-submodules --depth 1 --shallow-submodules -b v0.1.9 git@github.com:CoLearn-Dev/colink-sdk-a-rust-dev.git
-          git clone --recurse-submodules --depth 1 --shallow-submodules -b v0.1.9 git@github.com:CoLearn-Dev/colink-sdk-p-rust-dev.git
-          git clone --recurse-submodules --depth 1 --shallow-submodules -b dev git@github.com:CoLearn-Dev/colink-protocol-policy-module-dev.git
-          git clone --recurse-submodules --depth 1 --shallow-submodules -b dev git@github.com:CoLearn-Dev/colink-protocol-remote-storage-dev.git
+          git clone --recurse-submodules --depth 1 --shallow-submodules git@github.com:CoLearn-Dev/colink-server-dev.git
+          git clone --recurse-submodules --depth 1 --shallow-submodules git@github.com:CoLearn-Dev/colink-sdk-a-rust-dev.git
+          git clone --recurse-submodules --depth 1 --shallow-submodules git@github.com:CoLearn-Dev/colink-sdk-p-rust-dev.git
+          git clone --recurse-submodules --depth 1 --shallow-submodules git@github.com:CoLearn-Dev/colink-protocol-policy-module-dev.git
+          git clone --recurse-submodules --depth 1 --shallow-submodules git@github.com:CoLearn-Dev/colink-protocol-remote-storage-dev.git
       - name: Upload
         uses: actions/upload-artifact@v3
         with:

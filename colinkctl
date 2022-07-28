@@ -108,6 +108,7 @@ stop() {
 
 status() {
     cd colink-server-dev
+    echo "colink server:"
     if [ -f "./pid.txt" ]; then
         pid=`cat pid.txt`
         if ps -p $pid > /dev/null ; then
@@ -115,8 +116,12 @@ status() {
         else
             echo "colink server is stopped."
         fi
+    else
+        echo "colink server is stopped."
     fi
     cd ..
+    status_protocol colink-protocol-policy-module-dev
+    status_protocol colink-protocol-remote-storage-dev
 }
 
 create_users() {
@@ -145,9 +150,17 @@ start_protocol() {
         cd ..
         return
     fi
+    cargo build --all-targets
     cat ../user_token.txt | while read line
     do
         nohup cargo run -- --addr http://127.0.0.1:$port --jwt $line >/dev/null 2>&1 & echo $! >> pid.txt
+    done
+    sleep 1
+    cat ./pid.txt | while read pid
+    do
+        if ps -p $pid > /dev/null ; then
+            echo "pid ${pid} started."
+        fi
     done
     cd ..
 }
@@ -167,6 +180,26 @@ stop_protocol() {
         fi
     done
     rm pid.txt
+    cd ..
+}
+
+status_protocol() {
+    dir=$1
+    cd $dir
+    if ! [ -f "./pid.txt" ]; then
+        echo "protocol ${dir} is stopped."
+        cd ..
+        return
+    fi
+    echo "protocol ${dir}:"
+    cat ./pid.txt | while read pid
+    do
+        if ps -p $pid > /dev/null ; then
+            echo "`ps aux | grep ${pid} | grep -v grep`"
+        else
+            echo "pid ${pid} is stopped."
+        fi
+    done
     cd ..
 }
 
@@ -229,6 +262,12 @@ disable_dev_env() {
     stop_protocol colink-protocol-remote-storage-dev
 }
 
+if [ -z $COLINK_HOME ]; then
+    COLINK_HOME="$HOME/.colink"
+fi
+mkdir -p $COLINK_HOME
+cd $COLINK_HOME
+
 case "$1" in
     install)
         install
@@ -263,6 +302,13 @@ case "$1" in
         fi
         stop_protocol $2
         ;;
+    status_protocol)
+        if [ ! -n "$2" ]; then
+            echo "usage: $0 status_protocol directory"
+            exit -1
+        fi
+        status_protocol $2
+        ;;
     restart_protocol)
         if [ ! -n "$2" ]; then
             echo "usage: $0 restart_protocol directory"
@@ -278,6 +324,6 @@ case "$1" in
         disable_dev_env
         ;;
     *)
-        echo "usage: $0 {install|start|stop|status|restart|create_users|start_protocol|stop_protocol|restart_protocol|enable_dev_env|disable_dev_env}"
+        echo "usage: $0 {install|start|stop|status|restart|create_users|start_protocol|stop_protocol|status_protocol|restart_protocol|enable_dev_env|disable_dev_env}"
         exit -1
 esac
