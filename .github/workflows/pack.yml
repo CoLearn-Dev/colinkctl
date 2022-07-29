@@ -36,8 +36,21 @@ jobs:
         run: |
           tar -pcf colink.tar colinkctl colink-*
           cat colink.tar >> install_colink.sh
+      - name: Get RELEASE_NAME
+        run: |
+          echo "RELEASE_NAME=$(date +'%Y-%m-%d')-$(expr $(date +%s) - $(date +%s -d "$(date +'%Y-%m-%d')"))" >> $GITHUB_ENV
       - name: Upload
         uses: actions/upload-artifact@v3
         with:
           name: install_colink.sh
           path: install_colink.sh
+      - name: Create Release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: $RELEASE_NAME
+          body: $RELEASE_NAME
+          draft: false
+          prerelease: false
