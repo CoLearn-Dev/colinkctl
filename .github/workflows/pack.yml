@@ -51,7 +51,7 @@ jobs:
             github.rest.git.createRef({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              ref: 'refs/tags/$RELEASE_NAME',
+              ref: 'refs/tags/${{ env.RELEASE_NAME }}',
               sha: context.sha
             })
       - name: Create Release
@@ -59,8 +59,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: $RELEASE_NAME
-          release_name: $RELEASE_NAME
-          body: $RELEASE_NAME
+          tag_name: ${{ env.RELEASE_NAME }}
+          release_name: ${{ env.RELEASE_NAME }}
+          body: ${{ env.RELEASE_NAME }}
           draft: false
           prerelease: false
