@@ -89,6 +89,9 @@ start() {
     cp port.txt ../
     cp host_token.txt ../
     cd ..
+    if [ -f "./user_token.txt" ]; then
+        rm user_token.txt
+    fi
 }
 
 stop() {
@@ -132,7 +135,7 @@ create_users() {
     user_num=${user_num:-2}
     cargo run --example host_import_users_and_exchange_guest_jwts http://127.0.0.1:$port $host_token $user_num > user_token.txt
     cat user_token.txt
-    cp user_token.txt ../
+    cat user_token.txt >> ../user_token.txt
     cd ..
 }
 
