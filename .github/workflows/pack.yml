@@ -39,14 +39,10 @@ jobs:
       - name: Get RELEASE_NAME
         run: |
           echo "RELEASE_NAME=$(date +'%Y-%m-%d')-$(expr $(date +%s) - $(date +%s -d "$(date +'%Y-%m-%d')"))" >> $GITHUB_ENV
-      - name: Upload
-        uses: actions/upload-artifact@v3
-        with:
-          name: install_colink.sh
-          path: install_colink.sh
       - name: Create tag
         uses: actions/github-script@v6
         with:
+          github-token: ${{ secrets.PAT_TOKEN }}
           script: |
             github.rest.git.createRef({
               owner: context.repo.owner,
@@ -58,7 +54,7 @@ jobs:
         uses: actions/create-release@v1
         id: create_release
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.PAT_TOKEN }}
         with:
           tag_name: ${{ env.RELEASE_NAME }}
           release_name: ${{ env.RELEASE_NAME }}
@@ -68,7 +64,7 @@ jobs:
       - name: Upload Release Asset
         uses: actions/upload-release-asset@v1
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.PAT_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
           asset_path: ./install_colink.sh
