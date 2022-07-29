@@ -44,12 +44,22 @@ jobs:
         with:
           name: install_colink.sh
           path: install_colink.sh
+      - name: Create tag
+        uses: actions/github-script@v6
+        with:
+          script: |
+            github.rest.git.createRef({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              ref: 'refs/tags/$RELEASE_NAME',
+              sha: context.sha
+            })
       - name: Create Release
         uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: ${{ github.ref }}
+          tag_name: $RELEASE_NAME
           release_name: $RELEASE_NAME
           body: $RELEASE_NAME
           draft: false
