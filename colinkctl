@@ -265,6 +265,7 @@ disable_dev_env() {
 get_token() {
     echo "host_token:"
     cat host_token.txt
+    echo ""
     echo "users:"
     cat user_token.txt
 }
