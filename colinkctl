@@ -262,6 +262,13 @@ disable_dev_env() {
     stop_protocol colink-protocol-remote-storage-dev
 }
 
+get_token() {
+    echo "host_token:"
+    cat host_token.txt
+    echo "users:"
+    cat user_token.txt
+}
+
 if [ -z $COLINK_HOME ]; then
     COLINK_HOME="$HOME/.colink"
 fi
@@ -290,28 +297,28 @@ case "$1" in
         ;;
     start_protocol)
         if [ ! -n "$2" ]; then
-            echo "usage: $0 start_protocol directory"
+            echo "usage: colinkctl start_protocol directory"
             exit -1
         fi
         start_protocol $2
         ;;
     stop_protocol)
         if [ ! -n "$2" ]; then
-            echo "usage: $0 stop_protocol directory"
+            echo "usage: colinkctl stop_protocol directory"
             exit -1
         fi
         stop_protocol $2
         ;;
     status_protocol)
         if [ ! -n "$2" ]; then
-            echo "usage: $0 status_protocol directory"
+            echo "usage: colinkctl status_protocol directory"
             exit -1
         fi
         status_protocol $2
         ;;
     restart_protocol)
         if [ ! -n "$2" ]; then
-            echo "usage: $0 restart_protocol directory"
+            echo "usage: colinkctl restart_protocol directory"
             exit -1
         fi
         stop_protocol $2
@@ -323,7 +330,10 @@ case "$1" in
     disable_dev_env)
         disable_dev_env
         ;;
+    get_token)
+        get_token
+        ;;
     *)
-        echo "usage: $0 {install|start|stop|status|restart|create_users|start_protocol|stop_protocol|status_protocol|restart_protocol|enable_dev_env|disable_dev_env}"
+        echo "usage: colinkctl {install|start|stop|status|restart|create_users|start_protocol|stop_protocol|status_protocol|restart_protocol|get_token|enable_dev_env|disable_dev_env}"
         exit -1
 esac
