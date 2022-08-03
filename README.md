@@ -23,11 +23,11 @@ colinkctl enable_dev_env
 ```
 user@host:~$ colinkctl enable_dev_env
 Do you want to (re)start the colink server? [Y/n] 
-Enter the port to bind the colink server [8080]:
+Enter the port number for colink server [8080]:
 colink server start sucessfully.
 host_token: ***
 Do you want to create users? [Y/n] 
-number of users to create [2]:
+Enter the number of users you want to create [2]:
 .....
 .....
 Do you want to (re)start the policy module and accept all tasks? [Y/n] 

@@ -334,6 +334,6 @@ case "$1" in
         get_token
         ;;
     *)
-        echo "usage: colinkctl {install|start|stop|status|restart|create_users|start_protocol|stop_protocol|status_protocol|restart_protocol|get_token|enable_dev_env|disable_dev_env}"
+        echo "usage: colinkctl {start|stop|status|restart|create_users|start_protocol|stop_protocol|status_protocol|restart_protocol|get_token|install|enable_dev_env|disable_dev_env}"
         exit -1
 esac
