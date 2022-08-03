@@ -67,7 +67,7 @@ start() {
             return
         fi
     fi
-    read -r -p "Enter the port to bind the colink server [8080]:" port
+    read -r -p "Enter the port number for colink server [8080]:" port
     port=${port:-8080}
     nohup cargo run -- --address "0.0.0.0" --port $port --mq-amqp amqp://guest:guest@localhost:5672 --mq-api http://guest:guest@localhost:15672/api --mq-prefix $mq_prefix >/dev/null 2>&1 & echo -n $! > pid.txt
     pid=`cat pid.txt`
@@ -127,7 +127,7 @@ create_users() {
     port=`cat port.txt`
     host_token=`cat host_token.txt`
     cd colink-sdk-rust-dev
-    read -p "number of users to create [2]:" user_num
+    read -p "Enter the number of users you want to create [2]:" user_num
     user_num=${user_num:-2}
     cargo run --example host_import_users_and_exchange_guest_jwts http://127.0.0.1:$port $host_token $user_num > user_token.txt
     cat user_token.txt
