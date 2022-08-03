@@ -34,28 +34,24 @@ install() {
     cd colink-server-dev
     cargo build --all-targets
     cd ..
-    if ! [ -d "./colink-sdk-a-rust-dev" ]; then
-        git clone --recursive git@github.com:CoLearn-Dev/colink-sdk-a-rust-dev.git
+    if ! [ -d "./colink-sdk-rust-dev" ]; then
+        git clone --recursive git@github.com:CoLearn-Dev/colink-sdk-rust-dev.git
     fi
-    cd colink-sdk-a-rust-dev
-    cargo build --all-targets
-    cd ..
-    if ! [ -d "./colink-sdk-p-rust-dev" ]; then
-        git clone --recursive git@github.com:CoLearn-Dev/colink-sdk-p-rust-dev.git
-    fi
-    cd colink-sdk-p-rust-dev
+    cd colink-sdk-rust-dev
     cargo build --all-targets
     cd ..
     if ! [ -d "./colink-protocol-policy-module-dev" ]; then
         git clone --recursive git@github.com:CoLearn-Dev/colink-protocol-policy-module-dev.git
     fi
     cd colink-protocol-policy-module-dev
+    sed -i '/^colink-sdk =/ccolink-sdk = { path = "../colink-sdk-rust-dev" }' Cargo.toml
     cargo build --all-targets
     cd ..
     if ! [ -d "./colink-protocol-remote-storage-dev" ]; then
         git clone --recursive git@github.com:CoLearn-Dev/colink-protocol-remote-storage-dev.git
     fi
     cd colink-protocol-remote-storage-dev
+    sed -i '/^colink-sdk =/ccolink-sdk = { path = "../colink-sdk-rust-dev" }' Cargo.toml
     cargo build --all-targets
     cd ..
 }
@@ -130,7 +126,7 @@ status() {
 create_users() {
     port=`cat port.txt`
     host_token=`cat host_token.txt`
-    cd colink-sdk-a-rust-dev
+    cd colink-sdk-rust-dev
     read -p "number of users to create [2]:" user_num
     user_num=${user_num:-2}
     cargo run --example host_import_users_and_exchange_guest_jwts http://127.0.0.1:$port $host_token $user_num > user_token.txt
@@ -218,7 +214,7 @@ _enable_policy_module() {
 }
 
 enable_dev_env() {
-    read -r -p "Are you want to (re)start the colink server? [Y/n] " response
+    read -r -p "Do you want to (re)start the colink server? [Y/n] " response
     case "$response" in
         [nN][oO]|[nN])
             ;;
@@ -228,7 +224,7 @@ enable_dev_env() {
             ;;
     esac
 
-    read -r -p "Are you want to create users? [Y/n] " response
+    read -r -p "Do you want to create users? [Y/n] " response
     case "$response" in
         [nN][oO]|[nN])
             ;;
@@ -237,7 +233,7 @@ enable_dev_env() {
             ;;
     esac
 
-    read -r -p "Are you want to (re)start the policy module and accept all tasks? [Y/n] " response
+    read -r -p "Do you want to (re)start the policy module and accept all tasks? [Y/n] " response
     case "$response" in
         [nN][oO]|[nN])
             ;;
@@ -248,7 +244,7 @@ enable_dev_env() {
             ;;
     esac
 
-    read -r -p "Are you want to (re)start the remote storage? [Y/n] " response
+    read -r -p "Do you want to (re)start the remote storage? [Y/n] " response
     case "$response" in
         [nN][oO]|[nN])
             ;;
