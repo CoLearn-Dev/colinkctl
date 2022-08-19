@@ -11,6 +11,7 @@ install() {
             if ! [ -x "$(command -v cargo)" ]; then
                 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
                 source $HOME/.cargo/env
+                rustup default stable
             fi
             read -r -p "Install RabbitMQ? [Y/n] " response
             case "$response" in
@@ -51,6 +52,13 @@ install() {
         git clone --recursive git@github.com:CoLearn-Dev/colink-protocol-remote-storage-dev.git
     fi
     cd colink-protocol-remote-storage-dev
+    sed -i '/^colink-sdk =/ccolink-sdk = { path = "../colink-sdk-rust-dev" }' Cargo.toml
+    cargo build --all-targets
+    cd ..
+    if ! [ -d "./colink-protocol-registry-dev" ]; then
+        git clone --recursive git@github.com:CoLearn-Dev/colink-protocol-registry-dev.git
+    fi
+    cd colink-protocol-registry-dev
     sed -i '/^colink-sdk =/ccolink-sdk = { path = "../colink-sdk-rust-dev" }' Cargo.toml
     cargo build --all-targets
     cd ..
@@ -129,7 +137,7 @@ create_users() {
     cd colink-sdk-rust-dev
     read -p "Enter the number of users you want to create [2]:" user_num
     user_num=${user_num:-2}
-    cargo run --example host_import_users_and_exchange_guest_jwts http://127.0.0.1:$port $host_token $user_num > user_token.txt
+    cargo run --example host_import_users http://127.0.0.1:$port $host_token $user_num > user_token.txt
     cat user_token.txt
     cat user_token.txt >> ../user_token.txt
     cd ..
@@ -213,6 +221,43 @@ _enable_policy_module() {
     cd ..
 }
 
+ceate_local_registry() {
+    stop_local_registry
+    port=`cat port.txt`
+    host_token=`cat host_token.txt`
+    cd colink-sdk-rust-dev
+    cargo run --example host_import_users http://127.0.0.1:$port $host_token 1 > local_registry_token.txt
+    cat local_registry_token.txt > ../local_registry_token.txt
+    cd ..
+    registry_token=`cat local_registry_token.txt`
+    cd colink-protocol-policy-module-dev
+    nohup cargo run -- --addr http://127.0.0.1:$port --jwt $registry_token >/dev/null 2>&1 & echo $! >> ../local_registry_pid.txt
+    cargo run --example start_policy_module http://127.0.0.1:$port $registry_token
+    cargo run --example accept_all_tasks http://127.0.0.1:$port $registry_token
+    cd ..
+    cd colink-protocol-remote-storage-dev
+    nohup cargo run -- --addr http://127.0.0.1:$port --jwt $registry_token >/dev/null 2>&1 & echo $! >> ../local_registry_pid.txt
+    cd ..
+    cd colink-protocol-registry-dev
+    nohup cargo run -- --addr http://127.0.0.1:$port --jwt $registry_token >/dev/null 2>&1 & echo $! >> ../local_registry_pid.txt
+    cargo run --example update_registries http://127.0.0.1:8080 $registry_token $registry_token
+    cd ..
+}
+
+stop_local_registry() {
+    if ! [ -f "./local_registry_pid.txt" ]; then
+        echo "local registry ${dir} already stopped."
+        return
+    fi
+    cat ./local_registry_pid.txt | while read pid
+    do
+        if ps -p $pid > /dev/null ; then
+            kill -9 $pid
+        fi
+    done
+    rm local_registry_pid.txt
+}
+
 enable_dev_env() {
     read -r -p "Do you want to (re)start the colink server? [Y/n] " response
     case "$response" in
@@ -221,6 +266,15 @@ enable_dev_env() {
         *)
             stop
             start
+            ;;
+    esac
+
+    read -r -p "Do you want to create a local registry? [Y/n] " response
+    case "$response" in
+        [nN][oO]|[nN])
+            ;;
+        *)
+            ceate_local_registry
             ;;
     esac
 
@@ -253,12 +307,39 @@ enable_dev_env() {
             start_protocol colink-protocol-remote-storage-dev
             ;;
     esac
+
+    read -r -p "Do you want to (re)start the registry service? [Y/n] " response
+    case "$response" in
+        [nN][oO]|[nN])
+            ;;
+        *)
+            stop_protocol colink-protocol-registry-dev
+            start_protocol colink-protocol-registry-dev
+            if [ -f "./local_registry_token.txt" ]; then
+                read -r -p "Detected a local registry, do you want to set it as the default registry? [Y/n] " response
+                case "$response" in
+                    [nN][oO]|[nN])
+                        ;;
+                    *)
+                        registry_token=`cat local_registry_token.txt`
+                        cd colink-protocol-registry-dev
+                        cat ../user_token.txt | while read line
+                        do
+                            cargo run --example update_registries http://127.0.0.1:8080 $line $registry_token
+                        done
+                        cd ..
+                        ;;
+                esac
+            fi
+            ;;
+    esac
 }
 
 disable_dev_env() {
     stop
     stop_protocol colink-protocol-policy-module-dev
     stop_protocol colink-protocol-remote-storage-dev
+    stop_protocol colink-protocol-registry-dev
 }
 
 get_token() {
