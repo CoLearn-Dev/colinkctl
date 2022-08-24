@@ -240,7 +240,7 @@ ceate_local_registry() {
     cd ..
     cd colink-protocol-registry-dev
     nohup cargo run -- --addr http://127.0.0.1:$port --jwt $registry_token >/dev/null 2>&1 & echo $! >> ../local_registry_pid.txt
-    cargo run --example update_registries http://127.0.0.1:8080 $registry_token $registry_token
+    cargo run --example update_registries http://127.0.0.1:$port $registry_token $registry_token
     cd ..
 }
 
@@ -321,11 +321,12 @@ enable_dev_env() {
                     [nN][oO]|[nN])
                         ;;
                     *)
+                        port=`cat port.txt`
                         registry_token=`cat local_registry_token.txt`
                         cd colink-protocol-registry-dev
                         cat ../user_token.txt | while read line
                         do
-                            cargo run --example update_registries http://127.0.0.1:8080 $line $registry_token
+                            cargo run --example update_registries http://127.0.0.1:$port $line $registry_token
                         done
                         cd ..
                         ;;
