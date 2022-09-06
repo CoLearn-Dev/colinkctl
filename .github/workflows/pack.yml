@@ -35,7 +35,7 @@ jobs:
       - name: Pack
         run: |
           tar -pcf colink.tar colinkctl colink-*
-          cat colink.tar >> install_colink.sh
+          cat install_colink.template.sh colink.tar > install_colink.sh
       - name: Get RELEASE_NAME
         run: |
           echo "RELEASE_NAME=$(date +'%Y-%m-%d')-$(expr $(date +%s) - $(date +%s -d "$(date +'%Y-%m-%d')"))" >> $GITHUB_ENV
