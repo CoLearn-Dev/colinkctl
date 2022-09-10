@@ -25,6 +25,7 @@ fi
 
 if [ ! -z $PROFILE ]; then
     echo "Installing alias to $PROFILE"
+    sed -i '/^alias colinkctl=/d' $PROFILE
     echo "alias colinkctl=\"$COLINK_HOME/colinkctl\"" >> $PROFILE
     echo "Reopen your terminal to start using colinkctl."
 else
