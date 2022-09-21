@@ -103,7 +103,7 @@ stop() {
     if [ -f "./pid.txt" ]; then
         pid=`cat pid.txt`
         if ps -p $pid > /dev/null ; then
-            kill -9 $pid
+            kill -9 -$pid
         else
             echo "colink server already stopped."
         fi
