@@ -34,7 +34,7 @@ jobs:
           git clone --recurse-submodules --depth 1 --shallow-submodules git@github.com:CoLearn-Dev/colink-protocol-registry-dev.git
       - name: Compile
         run: | 
-          yes n | ./colinkctl install
+          printf "n\nn" | ./colinkctl install
       - name: Pack
         run: |
           tar -pcf colink.tar colinkctl colink-*
