@@ -1,6 +1,30 @@
 #!/bin/bash
 set -e
 
+read -r -p "Install dependencies? [Y/n] " response
+case "$response" in
+    [nN][oO]|[nN])
+        ;;
+    *)
+        sudo apt update && sudo apt install git g++ cmake pkg-config libssl-dev protobuf-compiler lsof -y
+        if ! [ -x "$(command -v cargo)" ]; then
+            curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+            source $HOME/.cargo/env
+            rustup default stable
+        fi
+        read -r -p "Install RabbitMQ? [Y/n] " response
+        case "$response" in
+            [nN][oO]|[nN])
+                ;;
+            *)
+                sudo apt install rabbitmq-server -y
+                sudo rabbitmq-plugins enable rabbitmq_management
+                sudo systemctl restart rabbitmq-server.service
+                ;;
+        esac
+        ;;
+esac
+
 if [ -z $COLINK_HOME ]; then
     COLINK_HOME="$HOME/.colink"
 fi
