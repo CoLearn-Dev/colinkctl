@@ -1,4 +1,3 @@
-mkdir ~/.cargo
 printf '[source.crates-io]\nreplace-with = "vendored-sources"\n\n[source.vendored-sources]\ndirectory = "all"\n' >> ~/.cargo/config.toml
 if ! [ -d "./colink-server-dev" ]; then
     git clone --recursive git@github.com:CoLearn-Dev/colink-server-dev.gittoml
