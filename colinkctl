@@ -77,7 +77,7 @@ start() {
     fi
     read -r -p "Enter the port number for colink server [8080]:" port
     port=${port:-8080}
-    nohup cargo run -- --address "0.0.0.0" --port $port --mq-amqp amqp://guest:guest@localhost:5672 --mq-api http://guest:guest@localhost:15672/api --mq-prefix $mq_prefix >/dev/null 2>&1 & echo -n $! > pid.txt
+    nohup ./target/release/colink-server --address "0.0.0.0" --port $port --mq-amqp amqp://guest:guest@localhost:5672 --mq-api http://guest:guest@localhost:15672/api --mq-prefix $mq_prefix >/dev/null 2>&1 & echo -n $! > pid.txt
     pid=`cat pid.txt`
     for i in {1..600}; do
         sleep 0.1
@@ -137,7 +137,7 @@ create_users() {
     cd colink-sdk-rust-dev
     read -p "Enter the number of users you want to create [2]:" user_num
     user_num=${user_num:-2}
-    cargo run --example host_import_users http://127.0.0.1:$port $host_token $user_num > user_token.txt
+    ./target/release/examples/host_import_users http://127.0.0.1:$port $host_token $user_num > user_token.txt
     cat user_token.txt
     cat user_token.txt >> ../user_token.txt
     cd ..
@@ -215,8 +215,8 @@ _enable_policy_module() {
     cd colink-protocol-policy-module-dev
     cat ../user_token.txt | while read line
     do
-        cargo run --example start_policy_module http://127.0.0.1:$port $line
-        cargo run --example accept_all_tasks http://127.0.0.1:$port $line
+        ./target/release/examples/start_policy_module start_policy_module http://127.0.0.1:$port $line
+        ./target/release/examples/accept_all_tasks http://127.0.0.1:$port $line
     done
     cd ..
 }
@@ -226,21 +226,21 @@ ceate_local_registry() {
     port=`cat port.txt`
     host_token=`cat host_token.txt`
     cd colink-sdk-rust-dev
-    cargo run --example host_import_users http://127.0.0.1:$port $host_token 1 > local_registry_token.txt
+    ./target/release/examples/host_import_users http://127.0.0.1:$port $host_token 1 > local_registry_token.txt
     cat local_registry_token.txt > ../local_registry_token.txt
     cd ..
     registry_token=`cat local_registry_token.txt`
     cd colink-protocol-policy-module-dev
-    nohup cargo run -- --addr http://127.0.0.1:$port --jwt $registry_token >/dev/null 2>&1 & echo $! >> ../local_registry_pid.txt
-    cargo run --example start_policy_module http://127.0.0.1:$port $registry_token
-    cargo run --example accept_all_tasks http://127.0.0.1:$port $registry_token
+    nohup ./target/release/colink-protocol-policy-module --addr http://127.0.0.1:$port --jwt $registry_token >/dev/null 2>&1 & echo $! >> ../local_registry_pid.txt
+    ./target/release/examples/start_policy_module http://127.0.0.1:$port $registry_token
+    ./target/release/examples/accept_all_tasks http://127.0.0.1:$port $registry_token
     cd ..
     cd colink-protocol-remote-storage-dev
-    nohup cargo run -- --addr http://127.0.0.1:$port --jwt $registry_token >/dev/null 2>&1 & echo $! >> ../local_registry_pid.txt
+    nohup ./target/release/colink-protocol-remote-storage --addr http://127.0.0.1:$port --jwt $registry_token >/dev/null 2>&1 & echo $! >> ../local_registry_pid.txt
     cd ..
     cd colink-protocol-registry-dev
-    nohup cargo run -- --addr http://127.0.0.1:$port --jwt $registry_token >/dev/null 2>&1 & echo $! >> ../local_registry_pid.txt
-    cargo run --example update_registries http://127.0.0.1:$port $registry_token $registry_token
+    nohup ./target/release/colink-protocol-registry --addr http://127.0.0.1:$port --jwt $registry_token >/dev/null 2>&1 & echo $! >> ../local_registry_pid.txt
+    ./target/release/examples/update_registries http://127.0.0.1:$port $registry_token $registry_token
     cd ..
 }
 
@@ -326,7 +326,7 @@ enable_dev_env() {
                         cd colink-protocol-registry-dev
                         cat ../user_token.txt | while read line
                         do
-                            cargo run --example update_registries http://127.0.0.1:$port $line $registry_token
+                            ./target/release/examples/update_registries http://127.0.0.1:$port $line $registry_token
                         done
                         cd ..
                         ;;

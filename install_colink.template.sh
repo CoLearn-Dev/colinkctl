@@ -25,6 +25,10 @@ case "$response" in
         ;;
 esac
 
+if ! [ -f "./mq_prefix.txt" ]; then
+    echo -n "colink-dev-script-$RANDOM" > mq_prefix.txt
+fi
+
 if [ -z $COLINK_HOME ]; then
     COLINK_HOME="$HOME/.colink"
 fi
