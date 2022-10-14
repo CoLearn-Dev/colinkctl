@@ -37,7 +37,7 @@ jobs:
           ./compile_release.sh
       - name: Pack
         run: |
-          tar -pcf colink.tar colinkctl colink-*/target/release/colink-*[!.]
+          tar -pcf colink.tar colinkctl colink-*/target/release/colink-*[!.] colink-*/target/release/examples
           cat install_colink.template.sh colink.tar > install_colink.sh
       - name: Get RELEASE_NAME
         run: |
