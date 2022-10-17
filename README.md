@@ -2,5 +2,5 @@
 
 ## Installation
 ```
-curl -fsSL https://raw.githubusercontent.com/CoLearn-Dev/colinkctl/new/install_colink.sh | bash
+bash -c "$(curl -fsSL https://raw.githubusercontent.com/CoLearn-Dev/colinkctl/new/install_colink.sh)"
 ```

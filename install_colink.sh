@@ -7,21 +7,22 @@ fi
 mkdir -p $COLINK_HOME
 
 echo "Install colinkctl to $COLINK_HOME"
-if command -v wget > /dev/null ; then
+if command -v curl > /dev/null ; then
+    curl -fsSL https://raw.githubusercontent.com/CoLearn-Dev/colinkctl/new/colinkctl -o $COLINK_HOME/colinkctl
+elif command -v wget > /dev/null ; then
     wget https://raw.githubusercontent.com/CoLearn-Dev/colinkctl/new/colinkctl -O $COLINK_HOME/colinkctl
-elif command -v curl > /dev/null ; then
-    curl https://raw.githubusercontent.com/CoLearn-Dev/colinkctl/new/colinkctl -o $COLINK_HOME/colinkctl
-elif
+else
     echo "command not found: wget or curl"
     exit 1
 fi
+chmod +x $COLINK_HOME/colinkctl
 echo "Install colinkctl: done"
 echo "Install CoLink server to $COLINK_HOME"
 cd $COLINK_HOME
-if command -v wget > /dev/null ; then
+if command -v curl > /dev/null ; then
+    curl -fsSL https://github.com/CoLearn-Dev/colink-server-dev/releases/latest/download/colink-server-linux-x86_64.tar.gz -o colink-server-linux-x86_64.tar.gz
+elif command -v wget > /dev/null ; then
     wget https://github.com/CoLearn-Dev/colink-server-dev/releases/latest/download/colink-server-linux-x86_64.tar.gz -O colink-server-linux-x86_64.tar.gz
-elif command -v curl > /dev/null ; then
-    curl https://github.com/CoLearn-Dev/colink-server-dev/releases/latest/download/colink-server-linux-x86_64.tar.gz -o colink-server-linux-x86_64.tar.gz
 fi
 tar -xzf colink-server-linux-x86_64.tar.gz
 rm colink-server-linux-x86_64.tar.gz

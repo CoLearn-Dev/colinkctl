@@ -62,6 +62,9 @@ start() {
             return
         fi
     fi
+    if ! [ -f "./colink-server.conf" ]; then
+        config
+    fi
     source colink-server.conf
     if [ "$enable_tls" = true ] ; then
         nohup ./colink-server --address 0.0.0.0 --port $port \
