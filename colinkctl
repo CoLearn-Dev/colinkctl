@@ -1,0 +1,141 @@
+#!/bin/bash
+set -e
+
+config() {
+    read -r -p "Enable TLS? [Y/n] " response
+    case "$response" in
+        [nN][oO]|[nN])
+            enable_tls=false
+            default_port=8080
+            ;;
+        *)
+            enable_tls=true
+            default_port=8443
+            ;;
+    esac
+    read -r -p "Enter the port number for colink server [$default_port]:" port
+    port=${port:-$default_port}
+    if [ "$enable_tls" = true ] ; then
+        read -r -p "Enter the domain name for colink server:" host_name
+    else
+        read -r -p "Enter the (domain name / IP address) for colink server:" host_name
+    fi
+    if [ "$enable_tls" = true ] ; then
+        read -r -p "Enter the server certificate file path for TLS (cert.pem):" cert_file
+        read -r -p "Enter the server private key file path for TLS (key.pem):" key_file
+        read -r -p "Enter the intermediate certificates file path for TLS (ca.pem):" ca_file
+        read -r -p "Enter the fullchain certificate file path for TLS (fullchain.pem):" fullchain_file
+        read -r -p "Apply the configuration to RabbitMQ? [Y/n] " response
+        case "$response" in
+            [nN][oO]|[nN])
+                ;;
+            *)
+                sudo bash -c "cat > /etc/rabbitmq/rabbitmq.conf <<- EOF
+listeners.tcp.default = 5672
+listeners.ssl.default = 5671
+ssl_options.cacertfile = $ca_file
+ssl_options.certfile = $cert_file
+ssl_options.keyfile = $key_file
+management.tcp.port = 15672
+management.tcp.idle_timeout = 120000
+management.tcp.inactivity_timeout = 120000
+management.tcp.request_timeout = 10000
+EOF"
+                sudo service rabbitmq-server restart
+                ;;
+        esac
+    fi
+    echo "enable_tls=$enable_tls" > colink-server.conf
+    echo "port=$port" >> colink-server.conf
+    echo "host_name=$host_name" >> colink-server.conf
+    echo "cert_file=$cert_file" >> colink-server.conf
+    echo "key_file=$key_file" >> colink-server.conf
+    echo "ca_file=$ca_file" >> colink-server.conf
+    echo "fullchain_file=$fullchain_file" >> colink-server.conf
+}
+
+start() {
+    if [ -f "./colink-server-pid.txt" ]; then
+        pid=`cat colink-server-pid.txt`
+        if ps -p $pid > /dev/null ; then
+            echo "colink server already started."
+            return
+        fi
+    fi
+    source colink-server.conf
+    if [ "$enable_tls" = true ] ; then
+        nohup ./colink-server --address 0.0.0.0 --port $port \
+            --mq-amqp amqps://guest:guest@$host_name:5671 \
+            --mq-api http://guest:guest@localhost:15672/api \
+            --cert $fullchain_file --key $key_file \
+            --core-uri https://$host_name:$port >/dev/null 2>&1 & echo -n $! > colink-server-pid.txt
+    else
+        nohup ./colink-server --address 0.0.0.0 --port $port \
+            --mq-amqp amqp://guest:guest@$host_name:5672 \
+            --mq-api http://guest:guest@localhost:15672/api \
+            --core-uri http://$host_name:$port >/dev/null 2>&1 & echo -n $! > colink-server-pid.txt
+    fi
+}
+
+stop() {
+    if [ -f "./colink-server-pid.txt" ]; then
+        pid=`cat colink-server-pid.txt`
+        if ps -p $pid > /dev/null ; then
+            kill -- -$(ps -o pgid= $pid | grep -o [0-9]*)
+        else
+            echo "colink server already stopped."
+        fi
+    else
+        echo "colink server already stopped."
+    fi
+}
+
+status() {
+    if [ -f "./colink-server-pid.txt" ]; then
+        pid=`cat colink-server-pid.txt`
+        if ps -p $pid > /dev/null ; then
+            echo "`ps aux | grep ${pid} | grep -v grep`"
+        else
+            echo "colink server is stopped."
+        fi
+    else
+        echo "colink server is stopped."
+    fi
+}
+
+get_token() {
+    echo "host_token:"
+    cat host_token.txt
+    echo ""
+}
+
+if [ -z $COLINK_HOME ]; then
+    COLINK_HOME="$HOME/.colink"
+fi
+mkdir -p $COLINK_HOME
+cd $COLINK_HOME
+
+case "$1" in
+    config)
+        config
+        ;;
+    start)
+        start
+        ;;
+    stop)
+        stop
+        ;;
+    status)
+        status
+        ;;
+    restart)
+        stop
+        start
+        ;;
+    get_token)
+        get_token
+        ;;
+    *)
+        echo "usage: colinkctl {start|stop|status|restart|config|get_token}"
+        exit -1
+esac
