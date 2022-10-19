@@ -8,9 +8,9 @@ mkdir -p $COLINK_HOME
 
 echo "Install colinkctl to $COLINK_HOME"
 if command -v curl > /dev/null ; then
-    curl -fsSL https://raw.githubusercontent.com/CoLearn-Dev/colinkctl/new/colinkctl -o $COLINK_HOME/colinkctl
+    curl -fsSL https://raw.githubusercontent.com/CoLearn-Dev/colinkctl/main/colinkctl -o $COLINK_HOME/colinkctl
 elif command -v wget > /dev/null ; then
-    wget https://raw.githubusercontent.com/CoLearn-Dev/colinkctl/new/colinkctl -O $COLINK_HOME/colinkctl
+    wget https://raw.githubusercontent.com/CoLearn-Dev/colinkctl/main/colinkctl -O $COLINK_HOME/colinkctl
 else
     echo "command not found: wget or curl"
     exit 1
