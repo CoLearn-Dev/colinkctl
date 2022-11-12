@@ -1,8 +1,12 @@
 #!/bin/bash
 set -e
 
-SERVER_ONLY=false
-SILENT_MODE=false
+if [ -z $SERVER_ONLY ]; then
+    SERVER_ONLY=false
+fi
+if [ -z $SILENT_MODE ]; then
+    SILENT_MODE=false
+fi
 for i in "$@"; do
   case $i in
     --silent)
