@@ -1,19 +1,19 @@
 #!/bin/bash
 set -e
 
-if [ -z $SERVER_ONLY ]; then
-    SERVER_ONLY=false
+if [ -z $COLINK_INSTALL_SERVER_ONLY ]; then
+    COLINK_INSTALL_SERVER_ONLY=false
 fi
-if [ -z $SILENT_MODE ]; then
-    SILENT_MODE=false
+if [ -z $COLINK_INSTALL_SILENT ]; then
+    COLINK_INSTALL_SILENT=false
 fi
 for i in "$@"; do
   case $i in
     --silent)
-      SILENT_MODE=true
+      COLINK_INSTALL_SILENT=true
       ;;
     --server-only)
-      SERVER_ONLY=true
+      COLINK_INSTALL_SERVER_ONLY=true
       ;;
     -*|--*)
       echo "Unknown option $i"
@@ -25,7 +25,7 @@ for i in "$@"; do
 done
 
 print_str () {
-    if [ "$SILENT_MODE" = "false" ] ; then
+    if [ "$COLINK_INSTALL_SILENT" = "false" ] ; then
         echo $1
     fi
 }
@@ -35,7 +35,7 @@ if [ -z $COLINK_HOME ]; then
 fi
 mkdir -p $COLINK_HOME
 
-if [ "$SERVER_ONLY" = "false" ] ; then
+if [ "$COLINK_INSTALL_SERVER_ONLY" = "false" ] ; then
     print_str "Install colinkctl to $COLINK_HOME"
     if command -v curl > /dev/null ; then
         curl -fsSL https://raw.githubusercontent.com/CoLearn-Dev/colinkctl/main/colinkctl -o $COLINK_HOME/colinkctl
@@ -61,7 +61,7 @@ rm colink-server-linux-x86_64.tar.gz
 cp user_init_config.template.toml user_init_config.toml
 print_str "Install colink-server: done"
 
-if [ "$SILENT_MODE" = "false" ] && [ "$SERVER_ONLY" = "false" ] ; then
+if [ "$COLINK_INSTALL_SILENT" = "false" ] && [ "$COLINK_INSTALL_SERVER_ONLY" = "false" ] ; then
     read -r -p "Install RabbitMQ? [Y/n] " response
     case "$response" in
         [nN][oO]|[nN])
@@ -96,7 +96,7 @@ if [ "$INSTALL_CTL" = "true" ] ; then
     fi
 fi
 
-if [ "$SILENT_MODE" = "false" ] ; then
+if [ "$COLINK_INSTALL_SILENT" = "false" ] ; then
     read -r -p "Start CoLink server now? [Y/n] " response
     case "$response" in
         [nN][oO]|[nN])
