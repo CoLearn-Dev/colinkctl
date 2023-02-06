@@ -51,10 +51,15 @@ fi
 
 print_str "Install CoLink server to $COLINK_HOME"
 cd $COLINK_HOME
+if [ -z $COLINK_SERVER_VERSION ]; then
+    DL_URI="https://github.com/CoLearn-Dev/colink-server-dev/releases/latest/download/colink-server-linux-x86_64.tar.gz"
+else
+    DL_URI="https://github.com/CoLearn-Dev/colink-server-dev/releases/download/$COLINK_SERVER_VERSION/colink-server-linux-x86_64.tar.gz"
+fi
 if command -v curl > /dev/null ; then
-    curl -fsSL https://github.com/CoLearn-Dev/colink-server-dev/releases/latest/download/colink-server-linux-x86_64.tar.gz -o colink-server-linux-x86_64.tar.gz
+    curl -fsSL $DL_URI -o colink-server-linux-x86_64.tar.gz
 elif command -v wget > /dev/null ; then
-    wget https://github.com/CoLearn-Dev/colink-server-dev/releases/latest/download/colink-server-linux-x86_64.tar.gz -O colink-server-linux-x86_64.tar.gz
+    wget $DL_URI -O colink-server-linux-x86_64.tar.gz
 fi
 tar -xzf colink-server-linux-x86_64.tar.gz
 rm colink-server-linux-x86_64.tar.gz
