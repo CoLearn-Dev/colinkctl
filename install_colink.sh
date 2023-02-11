@@ -51,18 +51,22 @@ fi
 
 print_str "Install CoLink server to $COLINK_HOME"
 cd $COLINK_HOME
+PACKAGE_NAME="colink-server-linux-x86_64.tar.gz"
+if [ "$(uname)" == "Darwin" ]; then
+    PACKAGE_NAME="colink-server-macos-x86_64.tar.gz"
+fi
 if [ -z $COLINK_SERVER_VERSION ]; then
-    DL_URI="https://github.com/CoLearn-Dev/colink-server-dev/releases/latest/download/colink-server-linux-x86_64.tar.gz"
+    DL_URI="https://github.com/CoLearn-Dev/colink-server-dev/releases/latest/download/$PACKAGE_NAME"
 else
-    DL_URI="https://github.com/CoLearn-Dev/colink-server-dev/releases/download/$COLINK_SERVER_VERSION/colink-server-linux-x86_64.tar.gz"
+    DL_URI="https://github.com/CoLearn-Dev/colink-server-dev/releases/download/$COLINK_SERVER_VERSION/$PACKAGE_NAME"
 fi
 if command -v curl > /dev/null ; then
-    curl -fsSL $DL_URI -o colink-server-linux-x86_64.tar.gz
+    curl -fsSL $DL_URI -o $PACKAGE_NAME
 elif command -v wget > /dev/null ; then
-    wget $DL_URI -O colink-server-linux-x86_64.tar.gz
+    wget $DL_URI -O $PACKAGE_NAME
 fi
-tar -xzf colink-server-linux-x86_64.tar.gz
-rm colink-server-linux-x86_64.tar.gz
+tar -xzf $PACKAGE_NAME
+rm $PACKAGE_NAME
 cp user_init_config.template.toml user_init_config.toml
 print_str "Install colink-server: done"
 
