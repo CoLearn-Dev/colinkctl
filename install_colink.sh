@@ -67,7 +67,6 @@ elif command -v wget > /dev/null ; then
 fi
 tar -xzf $PACKAGE_NAME
 rm $PACKAGE_NAME
-cp user_init_config.template.toml user_init_config.toml
 print_str "Install colink-server: done"
 
 if [ "$COLINK_INSTALL_SILENT" = "false" ] && [ "$COLINK_INSTALL_SERVER_ONLY" = "false" ] ; then
