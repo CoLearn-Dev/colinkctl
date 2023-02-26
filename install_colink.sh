@@ -104,7 +104,7 @@ if [ "$INSTALL_CTL" = "true" ] ; then
     fi
 fi
 
-if [ "$COLINK_INSTALL_SILENT" = "false" ] ; then
+if [ "$COLINK_INSTALL_SILENT" = "false" ] && [ "$COLINK_INSTALL_SERVER_ONLY" = "false" ] ; then
     read -r -p "Start CoLink server now? [Y/n] " response
     case "$response" in
         [nN][oO]|[nN])
